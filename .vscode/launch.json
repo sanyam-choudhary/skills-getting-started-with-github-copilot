@@ -4,6 +4,11 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+        # Create and switch to the new branch
+    git checkout -b accelerate-with-copilot
+    
+    # Push the branch to remote (and set it to track the remote branch)
+    git push -u origin accelerate-with-copilot
     {
       "name": "Launch Mergington WebApp",
       "type": "debugpy",

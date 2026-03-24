@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", () => {
+Hey Copilot, can you please edit the activity cards to add a participants section.
+It will show what participants that are already signed up for that activity as a bulleted list.
+Remember to make it pretty!document.addEventListener("DOMContentLoaded", () => {
   const activitiesList = document.getElementById("activities-list");
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
@@ -19,21 +21,47 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
+        
+        // Create participants list HTML
+        const participantsList = details.participants.length > 0
+          ? `<ul class="participants-list">${details.participants.map(p => `<li>${p} <span class="delete-participant" data-email="${p}" data-activity="${name}">×</span></li>`).join('')}</ul>`
+          : '<p class="no-participants"><em>No participants yet</em></p>';
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants-section">
+            <strong>Participants:</strong>
+            ${participantsList}
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
 
-        // Add option to select dropdown
-        const option = document.createElement("option");
-        option.value = name;
-        option.textContent = name;
-        activitySelect.appendChild(option);
+        // Add event listeners for delete buttons
+        activityCard.querySelectorAll('.delete-participant').forEach(btn => {
+          btn.addEventListener('click', async (event) => {
+            const email = event.target.dataset.email;
+            const activity = event.target.dataset.activity;
+            try {
+              const response = await fetch(`/activities/${encodeURIComponent(activity)}/participants/${encodeURIComponent(email)}`, {
+                method: 'DELETE'
+              });
+              if (response.ok) {
+                // Refetch activities to update the UI
+                fetchActivities();
+              } else {
+                const result = await response.json();
+                alert(result.detail || 'Failed to unregister');
+              }
+            } catch (error) {
+              console.error('Error unregistering:', error);
+              alert('Failed to unregister. Please try again.');
+            }
+          });
+        });
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
@@ -62,6 +90,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Update the activities list
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
